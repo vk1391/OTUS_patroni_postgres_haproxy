@@ -1,0 +1,30 @@
+---
+- name: database create
+  hosts: post_cluster
+  become: true
+  tags:
+    - dbcr 
+  roles:
+    - database
+- name: build etcd cluster
+  hosts: post_cluster
+  become: true
+  tags:
+    - etcd
+  roles:
+    - etcd_cluster
+- name: config patroni
+  hosts: post_cluster
+  become: true
+  tags:
+    - patroni
+  roles:
+    - patroni
+- name: haproxy
+  hosts: host4
+  become: true
+  tags:
+    - haproxy
+  roles:
+    - install_haproxy
+...

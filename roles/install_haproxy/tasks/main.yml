@@ -1,0 +1,40 @@
+- name: install haproxy
+  yum:
+    name: haproxy
+    state: present
+- name: config haproxy
+  copy:
+    content: |
+      global
+          maxconn 100
+
+      defaults
+          log global
+          mode tcp
+          retries 2
+          timeout client 30m
+          timeout connect 4s
+          timeout server 30m
+          timeout check 5s
+
+      listen stats
+          mode http
+          bind *:7000
+          stats enable
+          stats uri /
+
+      listen postgres
+          bind *:5000
+          option httpchk
+          http-check expect status 200
+          default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+          server postgresql_192.168.56.205_5432 192.168.56.205:5432 maxconn 100 check port 8008
+          server postgresql_192.168.56.206_5432 192.168.56.206:5432 maxconn 100 check port 8008
+          server postgresql_192.168.56.207_5432 192.168.56.207:5432 maxconn 100 check port 8008
+    dest: /etc/haproxy/haproxy.cfg
+- name: selinix settings
+  command: sudo setsebool -P haproxy_connect_any=1
+- name: restart haproxy
+  systemd:
+    name: haproxy
+    state: restarted 
